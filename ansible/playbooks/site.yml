@@ -1,0 +1,8 @@
+---
+# 02-kubespray запускается ОТДЕЛЬНО через scripts/02-run-kubespray.sh,
+# потому что Kubespray требует запуска из своей директории со своим
+# inventory и своим ansible.cfg. Импорт его playbook в общий site.yml
+# конфликтует с ansible.cfg проекта.
+- import_playbook: 01-prepare.yml
+- import_playbook: 03-post-kubespray.yml
+- import_playbook: 04-argocd.yml

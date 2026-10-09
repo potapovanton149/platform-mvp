@@ -1,0 +1,10 @@
+---
+# Всё, что поставим через ArgoCD — выключено здесь
+metrics_server_enabled: false
+ingress_nginx_enabled: false
+cert_manager_enabled: false
+helm_enabled: false
+
+# Оставляем только то, что реально нужно Kubespray из коробки
+coredns_enabled: true
+local_path_provisioner_enabled: false

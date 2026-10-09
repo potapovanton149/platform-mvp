@@ -1,0 +1,5 @@
+---
+# Тонкая обёртка. Реальный запуск делается через scripts/02-run-kubespray.sh,
+# потому что Kubespray требует запуска из своей директории и со своим inventory.
+- name: Run Kubespray cluster.yml
+  ansible.builtin.import_playbook: ../../kubespray/cluster.yml

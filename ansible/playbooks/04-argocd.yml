@@ -1,0 +1,7 @@
+---
+- name: Bootstrap ArgoCD and root App-of-Apps
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: argocd
