@@ -47,7 +47,7 @@
     kubeconfig: "{{ lookup('env','HOME') }}/.kube/config"
     kind: Deployment
     namespace: "{{ argocd_namespace }}"
-    name: "{{ argocd_release_name }}-server"
+    name: "{{ argocd_release_name }}-argocd-server"
   register: argocd_server
   until:
     - argocd_server.resources | length > 0
@@ -61,18 +61,32 @@
     state: present
     src: "{{ argocd_root_app }}"
 
-- name: Get initial admin password
+- name: Wait for initial admin secret
   kubernetes.core.k8s_info:
     kubeconfig: "{{ lookup('env','HOME') }}/.kube/config"
     kind: Secret
     namespace: "{{ argocd_namespace }}"
-    name: "{{ argocd_release_name }}-secret"
+    name: argocd-initial-admin-secret
   register: argocd_secret
+  until:
+    - argocd_secret.resources is defined
+    - argocd_secret.resources | length > 0
+    - argocd_secret.resources[0].data is defined
+    - argocd_secret.resources[0].data.password is defined
+  retries: 30
+  delay: 5
 
 - name: Decode admin password
   ansible.builtin.set_fact:
-    argocd_admin_password: "{{ argocd_secret.resources[0].data['admin.password'] | b64decode }}"
+    argocd_admin_password: "{{ argocd_secret.resources[0].data.password | b64decode }}"
 
+- name: Print ArgoCD access info
+  ansible.builtin.debug:
+    msg:
+      - "ArgoCD access: kubectl -n argocd port-forward svc/argo-cd-argocd-server 8080:443"
+      - "ArgoCD URL:    https://localhost:8080"
+      - "ArgoCD user:   admin"
+      - "ArgoCD pass:   {{ argocd_admin_password }}"
 - name: Print ArgoCD access info
   ansible.builtin.debug:
     msg:

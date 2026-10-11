@@ -8,8 +8,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/potapov149/platform-mvp
-    targetRevision: main
+    repoURL: https://github.com/potapovanton149/platform-mvp
+    targetRevision: master
     path: k8s/apps
     directory:
       recurse: true
