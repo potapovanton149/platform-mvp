@@ -1,0 +1,321 @@
+# ============ PROMETHEUS ============
+prometheus:
+  enabled: true
+  prometheusSpec:
+    replicas: 1
+    retention: 5d
+    retentionSize: 4GB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    nodeSelector: {}
+    tolerations: []
+  ingress:
+    enabled: false
+
+# ============ GRAFANA ============
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: "AdminPass123!"
+
+  grafana.ini:
+    server:
+      root_url: https://grafana.platform-mvp-potapov.ru
+      serve_from_sub_path: false
+    analytics:
+      checking_enabled: false
+    security:
+      allow_embedding: true
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - grafana.platform-mvp-potapov.ru
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.platform-mvp-potapov.ru
+
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    size: 5Gi
+    accessModes: ["ReadWriteOnce"]
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      searchNamespace: ALL
+
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki.logging.svc.cluster.local:3100
+      isDefault: false
+      jsonData:
+        maxLines: 1000
+        timeout: 60
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://tempo.tracing.svc.cluster.local:3200
+      isDefault: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: "5m"
+          filterByTraceID: true
+          filterBySpanID: false
+        tracesToMetrics:
+          datasourceUid: prometheus
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: "5m"
+        serviceMap:
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+        lokiSearch:
+          datasourceUid: loki
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+# ============ ALERTMANAGER ============
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - alertmanager.platform-mvp-potapov.ru
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.platform-mvp-potapov.ru
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: telegram
+      group_by: [alertname, severity, instance]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      routes:
+        - receiver: telegram
+          matchers:
+            - severity=~"critical|warning"
+          continue: false
+    receivers:
+      - name: telegram
+        telegram_configs:
+          - bot_token: "8873096245:AAFQa0ihCSdDslCoUsLV7mjNitR_u72Pvek"
+            chat_id: 5476863930
+            parse_mode: HTML
+            send_resolved: true
+            message: |
+              {{ range .Alerts -}}
+              <b>[{{ .Status | toUpper }}] {{ .Labels.alertname }}</b>
+              {{ if .Labels.severity }}<b>Severity:</b> {{ .Labels.severity }}{{ end }}
+              {{ if .Labels.instance }}<b>Instance:</b> {{ .Labels.instance }}{{ end }}
+              {{ if .Labels.namespace }}<b>Namespace:</b> {{ .Labels.namespace }}{{ end }}
+              {{ if .Annotations.summary }}<b>Summary:</b> {{ .Annotations.summary }}{{ end }}
+              {{ if .Annotations.description }}<b>Description:</b> {{ .Annotations.description }}{{ end }}
+              {{ end }}
+
+# ============ EXPORTERS ============
+nodeExporter:
+  enabled: true
+  livenessProbe:
+    failureThreshold: 10
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+  readinessProbe:
+    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+kubeStateMetrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  admissionWebhooks:
+    enabled: true
+
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false
+    configReloaders: true
+    general: true
+    k8sContainerCpuUsageSecondsTotal: true
+    k8sContainerMemoryCache: true
+    k8sContainerMemoryRss: true
+    k8sContainerMemorySwap: true
+    k8sContainerMemoryWorkingSetBytes: true
+    k8sPodOwner: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+
+# ============ CUSTOM ALERTS ============
+additionalPrometheusRulesMap:
+  platform-alerts:
+    groups:
+      - name: platform
+        rules:
+          - alert: NodeDown
+            expr: up{job="node-exporter"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Node {{ $labels.instance }} down"
+              description: "Node {{ $labels.instance }} has been down for 2 minutes"
+
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total[5m]) > 0
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} crashlooping"
+              description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting frequently"
+
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU on {{ $labels.instance }} (>80% for 10m)"
+
+          - alert: HighMemoryUsage
+            expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory on {{ $labels.instance }} (>90% for 5m)"
+
+          - alert: DiskSpaceLow
+            expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs"})) * 100 > 85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Low disk on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+
+          - alert: CertificateExpiringSoon
+            expr: (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 7
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              summary: "Certificate {{ $labels.name }} in {{ $labels.namespace }} expires in <7 days"

@@ -1,0 +1,97 @@
+defaultSettings:
+  defaultReplicaCount: 1
+  defaultDataPath: /var/lib/longhorn
+  storageMinimalAvailablePercentage: 10
+  defaultLonghornStaticStorageClass: longhorn
+  backupTarget: ""
+  backupTargetCredentialSecret: ""
+  upgradeChecker: false
+  concurrentReplicaRebuildPerNodeLimit: 1
+  concurrentVolumeBackupRestorePerNodeLimit: 1
+
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 1
+  defaultFsType: ext4
+  reclaimPolicy: Delete
+  createStorageClass: true
+
+csi:
+  kubeletRootDir: /var/lib/kubelet
+  attacherReplicaCount: 1
+  provisionerReplicaCount: 1
+  resizerReplicaCount: 1
+  snapshotterReplicaCount: 1
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: longhorn.platform-mvp-potapov.ru
+  tls: true
+  tlsSecret: longhorn-tls
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: kube-prometheus-stack
+
+longhornManager:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+longhornDriver:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+longhornUI:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+longhornAdmissionWebhook:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+longhornRecoveryBackend:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+longhornConversionWebhook:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+preUpgradeChecker:
+  jobEnabled: false
+  upgradeVersionCheck: false

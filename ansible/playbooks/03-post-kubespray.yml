@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars:
-    cp1_ip: 192.168.190.147
+    cp1_ip: 192.168.190.101
     kubeconfig_path: "{{ lookup('env','HOME') }}/.kube/config"
 
   tasks:
