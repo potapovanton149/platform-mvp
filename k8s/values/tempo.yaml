@@ -1,0 +1,55 @@
+tempo:
+  retention: 48h
+  reportingEnabled: false
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+  metricsGenerator:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  overrides:
+    defaults:
+      metrics_generator:
+        processors: []
+
+persistence:
+  enabled: true
+  storageClassName: longhorn
+  size: 20Gi
+  accessModes: ["ReadWriteOnce"]
+
+serviceMonitor:
+  enabled: true
+  labels:
+    release: kube-prometheus-stack
+
+tempoQuery:
+  enabled: false
+
+# Отключаем лишнее
+traces:
+  otlp:
+    grpc:
+      enabled: true
+    http:
+      enabled: true
+
+service:
+  type: ClusterIP
