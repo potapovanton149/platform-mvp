@@ -28,7 +28,7 @@ helm_version: "v3.16.1"
 # ============================================================
 # GitOps repo
 # ============================================================
-repo_url: "https://github.com/ivanov/platform-mvp"
+repo_url: "https://github.com/potapov149/platform-mvp"
 repo_branch: main
 
 # ============================================================
