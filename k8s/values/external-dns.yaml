@@ -1,0 +1,38 @@
+provider:
+  name: cloudflare
+
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-token
+        key: cloudflare_api_token
+
+domainFilters:
+  - platform-mvp-potapov.ru
+
+policy: sync
+txtOwnerId: platform-mvp
+txtPrefix: "_externaldns."
+
+sources:
+  - ingress
+  - service
+
+logLevel: info
+logFormat: json
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+serviceAccount:
+  create: true
+  name: external-dns
+
+rbac:
+  create: true
