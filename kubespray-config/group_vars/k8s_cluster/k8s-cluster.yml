@@ -1,0 +1,34 @@
+---
+# ============================================================
+# Переопределения для Kubespray
+# ============================================================
+kube_version: v1.30.4
+kube_network_plugin: cilium
+kube_proxy_mode: ipvs
+kube_proxy_strict_arp: true
+kube_proxy_remove: false
+
+kube_vip_enabled: true
+kube_vip_controlplane_enabled: true
+kube_vip_address: 192.168.190.100
+kube_vip_interface: ens33
+kube_vip_cidr: 32
+kube_vip_arp_enabled: true
+kube_vip_leader_election_enabled: true
+kube_vip_lb_enable: false
+supplementary_addresses_in_ssl_keys:
+  - 192.168.190.100
+
+kube_apiserver_ip: 192.168.190.100
+
+container_manager: containerd
+etcd_deployment_type: host
+dns_mode: coredns
+upstream_dns_servers:
+  - 1.1.1.1
+  - 8.8.8.8
+
+cilium_enable_hubble: true
+cilium_hubble_ui_enabled: true
+cilium_kube_proxy_replacement: false
+cilium_version: "v1.16.1"

@@ -1,0 +1,72 @@
+---
+- name: Post-Kubespray — kubeconfig, labels, verification
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    cp1_host: cp-1
+    cp1_ip: 192.168.190.147
+    kubeconfig_path: "{{ lookup('env','HOME') }}/.kube/config"
+
+  tasks:
+    - name: Ensure ~/.kube directory exists
+      ansible.builtin.file:
+        path: "{{ lookup('env','HOME') }}/.kube"
+        state: directory
+        mode: "0700"
+
+    - name: Fetch admin.conf from cp-1
+      ansible.builtin.shell: |
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+          devops@{{ cp1_ip }} "sudo cat /etc/kubernetes/admin.conf"
+      register: kubeconfig_raw
+      changed_when: false
+
+    - name: Write kubeconfig locally
+      ansible.builtin.copy:
+        dest: "{{ kubeconfig_path }}"
+        content: "{{ kubeconfig_raw.stdout }}"
+        mode: "0600"
+
+    - name: Point kubeconfig at VIP
+      ansible.builtin.replace:
+        path: "{{ kubeconfig_path }}"
+        regexp: 'https://{{ cp1_ip }}:6443'
+        replace: 'https://{{ kube_vip }}:6443'
+
+    - name: Wait for all nodes Ready
+      kubernetes.core.k8s_info:
+        kind: Node
+        kubeconfig: "{{ kubeconfig_path }}"
+      register: nodes_info
+      until:
+        - nodes_info.resources | length == 6
+        - nodes_info.resources
+          | map(attribute='status.conditions')
+          | map('selectattr','type','equalto','Ready')
+          | map('map', attribute='status')
+          | flatten | unique == ['True']
+      retries: 30
+      delay: 10
+
+    - name: Apply node labels
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path }}"
+        state: patched
+        kind: Node
+        name: "{{ item.0.key }}"
+        definition:
+          metadata:
+            labels: "{{ item.1 | items2dict(key_name='k', value_name='v') }}"
+      loop: "{{ node_labels | dict2items | subelements('value') }}"
+      vars:
+        _dummy: null
+
+    - name: Show cluster nodes
+      ansible.builtin.command: "kubectl --kubeconfig={{ kubeconfig_path }} get nodes -o wide"
+      register: nodes_out
+      changed_when: false
+
+    - name: Print nodes
+      ansible.builtin.debug:
+        msg: "{{ nodes_out.stdout_lines }}"

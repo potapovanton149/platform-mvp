@@ -1,0 +1,26 @@
+---
+common_timezone: "{{ timezone }}"
+common_swap_disabled: true
+common_packages:
+  - curl
+  - jq
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - htop
+  - vim
+  - net-tools
+  - python3-pip
+  - chrony
+  - open-vm-tools
+  - python3-kubernetes
+common_kernel_modules:
+  - br_netfilter
+  - overlay
+common_sysctl:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1
+  fs.inotify.max_user_watches: 524288
+  fs.inotify.max_user_instances: 512

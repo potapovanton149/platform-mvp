@@ -1,0 +1,8 @@
+---
+argocd_namespace: "{{ argocd_namespace | default('argocd') }}"
+argocd_chart_version: "{{ argocd_chart_version | default('7.6.12') }}"
+argocd_release_name: argo-cd
+argocd_helm_repo_name: argo
+argocd_helm_repo_url: https://argoproj.github.io/argo-helm
+argocd_values_file: "{{ role_path }}/files/argocd-values.yaml"
+argocd_root_app: "{{ playbook_dir }}/../../k8s/bootstrap/root-app.yaml"
