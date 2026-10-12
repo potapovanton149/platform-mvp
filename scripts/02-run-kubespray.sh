@@ -1,4 +1,3 @@
-cat > ~/platform-mvp/scripts/02-run-kubespray.sh <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -43,7 +42,7 @@ ANSIBLE_SSH_ARGS='-o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyCh
 
 echo "==> Fetching kubeconfig from cp-1..."
 mkdir -p ~/.kube
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no devops@192.168.190.147 \
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no devops@192.168.190.101 \
   "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
 sed -i -E 's#https://(127\.0\.0\.1|192\.168\.190\.147|192\.168\.75\.100):6443#https://192.168.190.100:6443#' ~/.kube/config
 chmod 600 ~/.kube/config
@@ -74,6 +73,3 @@ done
 
 echo "==> Done. kubeconfig at ~/.kube/config"
 kubectl get nodes || true
-EOF
-
-chmod +x ~/platform-mvp/scripts/02-run-kubespray.sh
