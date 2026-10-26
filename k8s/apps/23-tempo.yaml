@@ -16,7 +16,7 @@ spec:
       helm:
         valueFiles:
           - $values/k8s/values/tempo.yaml
-    - repoURL: https://github.com/potapovanton149/platform-mvp
+    - repoURL: https://github.com/potapovanton149/platform-mvp.git
       targetRevision: master
       ref: values
   destination:

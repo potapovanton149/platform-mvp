@@ -28,7 +28,16 @@ prometheus:
     nodeSelector: {}
     tolerations: []
   ingress:
-    enabled: false
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    hosts:
+      - prometheus.platform-mvp-potapov.ru
+    tls:
+      - secretName: prometheus-tls
+        hosts:
+          - prometheus.platform-mvp-potapov.ru
 
 # ============ GRAFANA ============
 grafana:
@@ -129,8 +138,26 @@ grafana:
 # ============ ALERTMANAGER ============
 alertmanager:
   enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    hosts:
+      - alertmanager.platform-mvp-potapov.ru
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.platform-mvp-potapov.ru
   alertmanagerSpec:
     replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
     storage:
       volumeClaimTemplate:
         spec:
@@ -139,54 +166,43 @@ alertmanager:
           resources:
             requests:
               storage: 5Gi
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: 300m
-        memory: 256Mi
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    annotations:
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    hosts:
-      - alertmanager.platform-mvp-potapov.ru
-    tls:
-      - secretName: alertmanager-tls
-        hosts:
-          - alertmanager.platform-mvp-potapov.ru
+    # Монтируем Secret с telegram-токеном из Vault
+    volumes:
+      - name: telegram-secret
+        secret:
+          secretName: alertmanager-telegram
+    volumeMounts:
+      - name: telegram-secret
+        mountPath: /etc/alertmanager/secrets
+        readOnly: true
+
   config:
     global:
       resolve_timeout: 5m
     route:
-      receiver: telegram
-      group_by: [alertname, severity, instance]
+      group_by: ['alertname', 'namespace']
       group_wait: 30s
       group_interval: 5m
-      repeat_interval: 4h
+      repeat_interval: 3h
+      receiver: 'telegram'
       routes:
-        - receiver: telegram
-          matchers:
-            - severity=~"critical|warning"
-          continue: false
+        - match:
+            severity: critical
+          receiver: 'telegram'
     receivers:
-      - name: telegram
+      - name: 'telegram'
         telegram_configs:
-          - bot_token: "8873096245:AAFQa0ihCSdDslCoUsLV7mjNitR_u72Pvek"
-            chat_id: 5476863930
-            parse_mode: HTML
+          - bot_token_file: /etc/alertmanager/secrets/bot-token
+            chat_id: 0  # перезапишется через chat_id_file? см. примечание ниже
+            chat_id_file: /etc/alertmanager/secrets/chat-id
+            parse_mode: 'HTML'
             send_resolved: true
-            message: |
-              {{ range .Alerts -}}
-              <b>[{{ .Status | toUpper }}] {{ .Labels.alertname }}</b>
-              {{ if .Labels.severity }}<b>Severity:</b> {{ .Labels.severity }}{{ end }}
-              {{ if .Labels.instance }}<b>Instance:</b> {{ .Labels.instance }}{{ end }}
-              {{ if .Labels.namespace }}<b>Namespace:</b> {{ .Labels.namespace }}{{ end }}
-              {{ if .Annotations.summary }}<b>Summary:</b> {{ .Annotations.summary }}{{ end }}
-              {{ if .Annotations.description }}<b>Description:</b> {{ .Annotations.description }}{{ end }}
-              {{ end }}
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'namespace']
 
 # ============ EXPORTERS ============
 nodeExporter:

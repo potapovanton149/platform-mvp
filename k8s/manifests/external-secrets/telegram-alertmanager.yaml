@@ -1,0 +1,22 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: telegram-alertmanager
+  namespace: monitoring
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: alertmanager-telegram
+    creationPolicy: Owner
+  data:
+    - secretKey: bot-token
+      remoteRef:
+        key: platform/telegram
+        property: bot-token
+    - secretKey: chat-id
+      remoteRef:
+        key: platform/telegram
+        property: chat-id

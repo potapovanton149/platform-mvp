@@ -1,0 +1,67 @@
+global:
+  enabled: true
+  tlsDisable: true
+
+server:
+  dev:
+    enabled: true
+    devRootToken: "root"
+
+  standalone:
+    enabled: false
+
+  ui:
+    enabled: true
+    serviceType: ClusterIP
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    hosts:
+      - host: vault.platform-mvp-potapov.ru
+    tls:
+      - secretName: vault-tls
+        hosts:
+          - vault.platform-mvp-potapov.ru
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  auditStorage:
+    enabled: false
+
+  extraEnvironmentVars:
+    VAULT_AUDIT_LOG_DEVICE: "stdout"
+
+  dataStorage:
+    enabled: false
+
+  service:
+    enabled: true
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack
+
+  extraContainers: []
+
+ui:
+  enabled: true
+  serviceType: ClusterIP
+
+csi:
+  enabled: false
+
+injector:
+  enabled: false

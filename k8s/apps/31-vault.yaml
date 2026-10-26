@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/potapovanton149/platform-mvp.git
+      targetRevision: c991c31
+      path: k8s/charts/vault
+      helm:
+        valueFiles:
+          - $values/k8s/values/vault.yaml
+    - repoURL: https://github.com/potapovanton149/platform-mvp.git
+      targetRevision: c991c31
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

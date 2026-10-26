@@ -10,13 +10,13 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://charts.longhorn.io
-      chart: longhorn
-      targetRevision: 1.7.2
+    - repoURL: https://github.com/potapovanton149/platform-mvp.git
+      targetRevision: master
+      path: k8s/charts/longhorn
       helm:
         valueFiles:
           - $values/k8s/values/longhorn.yaml
-    - repoURL: https://github.com/potapovanton149/platform-mvp
+    - repoURL: https://github.com/potapovanton149/platform-mvp.git
       targetRevision: master
       ref: values
   destination:
@@ -28,7 +28,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - SkipHooks=true
+      - ServerSideApply=true
     retry:
       limit: 5
       backoff:
