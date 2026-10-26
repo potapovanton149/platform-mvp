@@ -22,9 +22,26 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: harbor
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: harbor-core
+      jsonPointers:
+        - /spec/strategy
+    - group: apps
+      kind: Deployment
+      name: harbor-jobservice
+      jsonPointers:
+        - /spec/strategy
+    - group: apps
+      kind: Deployment
+      name: harbor-registry
+      jsonPointers:
+        - /spec/strategy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
