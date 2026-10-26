@@ -11,13 +11,13 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: c991c31
+      targetRevision: c773c1af093cf283e1c8aa34e3bc1fe0c526f405
       path: k8s/charts/vault
       helm:
         valueFiles:
           - $values/k8s/values/vault.yaml
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: c991c31
+      targetRevision: c773c1af093cf283e1c8aa34e3bc1fe0c526f405
       ref: values
   destination:
     server: https://kubernetes.default.svc
