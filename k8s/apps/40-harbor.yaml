@@ -17,7 +17,7 @@ spec:
         valueFiles:
           - $values/k8s/values/harbor.yaml
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: 176c0f0181a8e29d8cfd1ea13aa0c4e3492e88a3
+      targetRevision: ac98f830bb961269fadbd342f10509f274a6930b
       ref: values
   destination:
     server: https://kubernetes.default.svc
@@ -28,4 +28,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      # ← ServerSideApply=true убран
