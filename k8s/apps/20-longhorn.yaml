@@ -11,13 +11,13 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: master
+      targetRevision: 9ad685e6928aaed43896948a72fb6ee4a9c65e9c
       path: k8s/charts/longhorn
       helm:
         valueFiles:
           - $values/k8s/values/longhorn.yaml
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: master
+      targetRevision: 9ad685e6928aaed43896948a72fb6ee4a9c65e9c
       ref: values
   destination:
     server: https://kubernetes.default.svc
