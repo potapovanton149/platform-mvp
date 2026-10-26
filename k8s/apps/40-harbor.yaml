@@ -17,7 +17,7 @@ spec:
         valueFiles:
           - $values/k8s/values/harbor.yaml
     - repoURL: https://github.com/potapovanton149/platform-mvp.git
-      targetRevision: ac98f830bb961269fadbd342f10509f274a6930b
+      targetRevision: cffe89e7290597861b449aa1c9d0609439f224a2
       ref: values
   destination:
     server: https://kubernetes.default.svc
