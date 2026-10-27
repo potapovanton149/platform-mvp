@@ -1,0 +1,19 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: gitlab-root-password
+  namespace: gitlab
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: gitlab-gitlab-initial-root-password
+    creationPolicy: Owner       # ← вместо Merge
+    deletionPolicy: Retain
+  data:
+    - secretKey: password
+      remoteRef:
+        key: kv/platform/gitlab
+        property: root-password

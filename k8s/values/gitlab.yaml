@@ -1,0 +1,147 @@
+global:
+  edition: ce
+  gitlabBase:
+    image:
+      tag: "102954738c8fd23c3b9396aa96a2dbf5cbeba5e9"
+  hosts:
+    domain: platform-mvp-potapov.ru
+    https: true
+    gitlab:
+      name: gitlab.platform-mvp-potapov.ru
+    registry:
+      name: registry.gitlab.platform-mvp-potapov.ru
+    minio:
+      name: minio.gitlab.platform-mvp-potapov.ru
+  ingress:
+    class: nginx
+    configureCertmanager: false
+    tls:
+      enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  initialRootPassword:
+    secret: gitlab-gitlab-initial-root-password
+    key: password
+  minio:
+    enabled: false
+  appConfig:
+    object_store:
+      enabled: true
+      connection:
+        secret: gitlab-object-storage
+        key: config
+  grafana:
+    enabled: false
+  prometheus:
+    enabled: false
+
+upgradeCheck:
+  enabled: false
+
+certmanager:
+  install: false
+installCertmanager: false
+
+nginx-ingress:
+  enabled: false
+
+prometheus:
+  install: false
+
+gitlab-runner:
+  install: false
+
+redis:
+  install: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: 7.2.4-debian-12-r9
+  metrics:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/redis-exporter
+      tag: 1.58.0-debian-12-r4
+  master:
+    persistence:
+      size: 2Gi
+      storageClass: longhorn
+    resources:
+      requests: {cpu: 100m, memory: 256Mi}
+      limits:   {cpu: 500m, memory: 512Mi}
+
+postgresql:
+  install: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: 14.8.0
+  metrics:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/postgres-exporter
+      tag: 0.14.0-debian-11-r2
+  persistence:
+    size: 10Gi
+    storageClass: longhorn
+  resources:
+    requests: {cpu: 200m, memory: 512Mi}
+    limits:   {cpu: 1, memory: 1Gi}
+
+minio:
+  install: false
+
+shared-secrets:
+  enabled: true
+
+gitlab:
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests: {cpu: 300m, memory: 1Gi}
+      limits:   {cpu: 1500m, memory: 2Gi}
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests: {cpu: 200m, memory: 1Gi}
+      limits:   {cpu: 1000m, memory: 2Gi}
+  gitaly:
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: longhorn
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+      limits:   {cpu: 1000m, memory: 1Gi}
+  gitlab-shell:
+    replicas: 1
+    resources:
+      requests: {cpu: 100m, memory: 128Mi}
+      limits:   {cpu: 500m, memory: 512Mi}
+  toolbox:
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+      limits:   {cpu: 1, memory: 2Gi}
+  migrations:
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+      limits:   {cpu: 1, memory: 1Gi}
+  gitlab-exporter:
+    enabled: true
+    resources:
+      requests: {cpu: 50m, memory: 64Mi}
+      limits:   {cpu: 200m, memory: 256Mi}
+  registry:
+    enabled: true
+    resources:
+      requests: {cpu: 100m, memory: 256Mi}
+      limits:   {cpu: 500m, memory: 512Mi}
+  pages:
+    enabled: false
+  mailroom:
+    enabled: false
+  spamcheck:
+    enabled: false

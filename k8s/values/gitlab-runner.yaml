@@ -1,0 +1,41 @@
+gitlabUrl: https://gitlab.platform-mvp-potapov.ru
+
+image:
+  registry: harbor.platform-mvp-potapov.ru
+  image: online-boutique/gitlab-runner-ca
+  tag: v19.5.1-fixed5
+  pullPolicy: IfNotPresent
+
+certsSecretName: gitlab-runner-ca
+
+envVars:
+  - name: GITLAB_RUNNER_INSECURE
+    value: "true"
+
+concurrent: 4
+checkInterval: 10
+
+runners:
+  secret: gitlab-runner-secret
+  config: |
+    [[runners]]
+      name = "k8s-runner"
+      executor = "kubernetes"
+      tls-ca-file = "/etc/ssl/certs/gitlab-ca.crt"
+      [runners.kubernetes]
+        namespace = "gitlab"
+        image = "alpine:latest"
+        privileged = true
+        tls_verify = false
+        poll_timeout = 600
+        cpu_request = "200m"
+        memory_request = "256Mi"
+        cpu_limit = "1"
+        memory_limit = "1Gi"
+
+rbac:
+  create: true
+
+resources:
+  requests: {cpu: 100m, memory: 128Mi}
+  limits:   {cpu: 500m, memory: 512Mi}
