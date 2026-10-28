@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: adservice
+  labels: {app: adservice}
+spec:
+  selector: {app: adservice}
+  ports: [{name: grpc, port: 9555, targetPort: 9555}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: adservice}}
+  template:
+    metadata:
+      labels: {app: adservice}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9555"
+    spec:
+      imagePullSecrets: [{name: harbor-creds}]
+      containers:
+        - name: adservice
+          image: harbor.platform-mvp-potapov.ru/online-boutique/adservice:v1.0.0
+          ports: [{name: grpc, containerPort: 9555}]
+          env:
+            - {name: PORT, value: "9555"}
+            - {name: DISABLE_PROFILER, value: "1"}
+            - {name: OTEL_SERVICE_NAME, value: "adservice"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.tracing.svc:4317"}
+          resources:
+            requests: {cpu: 200m, memory: 256Mi}
+            limits:   {cpu: 1000m, memory: 1Gi}

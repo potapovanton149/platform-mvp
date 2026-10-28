@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: online-boutique
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: online-boutique.rules
+      interval: 30s
+      rules:
+        - alert: OBHighErrorRate
+          expr: |
+            sum by (service_name) (rate(grpc_server_handled_total{namespace="online-boutique",grpc_code!="OK"}[5m]))
+            /
+            sum by (service_name) (rate(grpc_server_handled_total{namespace="online-boutique"}[5m])) > 0.05
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "High error rate on {{ $labels.service_name }}"
+            description: "gRPC error rate > 5% for 5m (current {{ $value | humanizePercentage }})"
+
+        - alert: OBHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le, service_name) (rate(grpc_server_handling_seconds_bucket{namespace="online-boutique"}[5m]))
+            ) > 0.5
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "p95 latency > 500ms on {{ $labels.service_name }}"
+
+        - alert: OBServiceDown
+          expr: |
+            up{job=~".*online-boutique.*"} == 0
+            or
+            absent(kube_pod_info{namespace="online-boutique",pod=~"frontend.*"})
+          for: 2m
+          labels: {severity: critical, app: online-boutique}
+          annotations:
+            summary: "Online Boutique service down"
+
+        - alert: OBPodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="online-boutique"}[10m]) > 3
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "Pod {{ $labels.pod }} crash looping"

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shippingservice
+  labels: {app: shippingservice}
+spec:
+  selector: {app: shippingservice}
+  ports: [{name: grpc, port: 50051, targetPort: 50051}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: shippingservice}}
+  template:
+    metadata:
+      labels: {app: shippingservice}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "50051"
+    spec:
+      imagePullSecrets: [{name: harbor-creds}]
+      containers:
+        - name: shippingservice
+          image: harbor.platform-mvp-potapov.ru/online-boutique/shippingservice:v1.0.0
+          ports: [{name: grpc, containerPort: 50051}]
+          env:
+            - {name: PORT, value: "50051"}
+            - {name: DISABLE_PROFILER, value: "1"}
+            - {name: OTEL_SERVICE_NAME, value: "shippingservice"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.tracing.svc:4317"}
+          resources:
+            requests: {cpu: 100m, memory: 64Mi}
+            limits:   {cpu: 500m, memory: 256Mi}

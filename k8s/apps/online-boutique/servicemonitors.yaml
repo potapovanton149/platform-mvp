@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: online-boutique
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames: [online-boutique]
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [frontend, cartservice, productcatalogservice, currencyservice, paymentservice, shippingservice, emailservice, checkoutservice, recommendationservice, adservice]}
+  endpoints:
+    - port: grpc
+      interval: 30s
+      path: /metrics
+    - port: http
+      interval: 30s
+      path: /metrics
