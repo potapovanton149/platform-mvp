@@ -1,0 +1,38 @@
+stages: [build]
+
+variables:
+  HARBOR: harbor.platform-mvp-potapov.ru/online-boutique
+  TAG: $CI_COMMIT_SHORT_SHA
+  KANIKO_IMAGE: gcr.io/kaniko-project/executor:v1.23.2-debug
+
+.build_template: &build
+  stage: build
+  image:
+    name: $KANIKO_IMAGE
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - |
+      cat > /kaniko/.docker/config.json <<EOF
+      {"auths":{"harbor.platform-mvp-potapov.ru":{"auth":"$(printf 'admin:Harbor12345' | base64)"}}}
+      EOF
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR/$CTX"
+      --dockerfile "$CI_PROJECT_DIR/$CTX/Dockerfile"
+      --destination "$HARBOR/$SVC:$TAG"
+      --destination "$HARBOR/$SVC:latest"
+      --cache=true --cache-repo="$HARBOR/cache"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+
+frontend:              {<<: *build, variables: {SVC: frontend, CTX: src/frontend}}
+cartservice:           {<<: *build, variables: {SVC: cartservice, CTX: src/cartservice/src}}
+productcatalogservice: {<<: *build, variables: {SVC: productcatalogservice, CTX: src/productcatalogservice}}
+currencyservice:       {<<: *build, variables: {SVC: currencyservice, CTX: src/currencyservice}}
+paymentservice:        {<<: *build, variables: {SVC: paymentservice, CTX: src/paymentservice}}
+shippingservice:       {<<: *build, variables: {SVC: shippingservice, CTX: src/shippingservice}}
+emailservice:          {<<: *build, variables: {SVC: emailservice, CTX: src/emailservice}}
+checkoutservice:       {<<: *build, variables: {SVC: checkoutservice, CTX: src/checkoutservice}}
+recommendationservice: {<<: *build, variables: {SVC: recommendationservice, CTX: src/recommendationservice}}
+adservice:             {<<: *build, variables: {SVC: adservice, CTX: src/adservice}}
+loadgenerator:         {<<: *build, variables: {SVC: loadgenerator, CTX: src/loadgenerator}}

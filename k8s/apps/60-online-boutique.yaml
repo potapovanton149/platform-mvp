@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: online-boutique
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/potapovanton149/platform-mvp.git
+    targetRevision: master
+    path: k8s/apps/online-boutique
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: online-boutique
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/volumeClaimTemplates

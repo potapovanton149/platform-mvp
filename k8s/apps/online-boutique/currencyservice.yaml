@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: currencyservice
+  labels: {app: currencyservice}
+spec:
+  selector: {app: currencyservice}
+  ports: [{name: grpc, port: 7000, targetPort: 7000}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currencyservice
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: currencyservice}}
+  template:
+    metadata:
+      labels: {app: currencyservice}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7000"
+    spec:
+      imagePullSecrets: [{name: harbor-creds}]
+      containers:
+        - name: currencyservice
+          image: harbor.platform-mvp-potapov.ru/online-boutique/currencyservice:v1.0.0
+          ports: [{name: grpc, containerPort: 7000}]
+          env:
+            - {name: PORT, value: "7000"}
+            - {name: DISABLE_PROFILER, value: "1"}
+            - {name: OTEL_SERVICE_NAME, value: "currencyservice"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.tracing.svc:4317"}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits:   {cpu: 500m, memory: 256Mi}

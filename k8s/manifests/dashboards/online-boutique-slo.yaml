@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-online-boutique-slo
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  online-boutique-slo.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "RPS by service",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [{
+            "expr": "sum by (service_name) (rate(grpc_server_handled_total{namespace=\"online-boutique\"}[1m]))",
+            "legendFormat": "{{service_name}}"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency p95 by service",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(grpc_server_handling_seconds_bucket{namespace=\"online-boutique\"}[5m])))",
+            "legendFormat": "{{service_name}}"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error rate (5xx + gRPC non-OK)",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [{
+            "expr": "sum by (service_name) (rate(grpc_server_handled_total{namespace=\"online-boutique\",grpc_code!=\"OK\"}[5m])) / sum by (service_name) (rate(grpc_server_handled_total{namespace=\"online-boutique\"}[5m]))",
+            "legendFormat": "{{service_name}}"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "SLO: availability (1 - error ratio) — target 99%",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [{
+            "expr": "1 - (sum(rate(grpc_server_handled_total{namespace=\"online-boutique\",grpc_code!=\"OK\"}[5m])) / sum(rate(grpc_server_handled_total{namespace=\"online-boutique\"}[5m])))",
+            "legendFormat": "availability"
+          }],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0.9, "max": 1}}
+        },
+        {
+          "type": "stat",
+          "title": "Requests total (1h)",
+          "gridPos": {"h": 6, "w": 8, "x": 0, "y": 16},
+          "targets": [{
+            "expr": "sum(increase(grpc_server_handled_total{namespace=\"online-boutique\"}[1h]))"
+          }]
+        },
+        {
+          "type": "stat",
+          "title": "p95 (1h)",
+          "gridPos": {"h": 6, "w": 8, "x": 8, "y": 16},
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(grpc_server_handling_seconds_bucket{namespace=\"online-boutique\"}[1h])))"
+          }],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "type": "stat",
+          "title": "Pods Running",
+          "gridPos": {"h": 6, "w": 8, "x": 16, "y": 16},
+          "targets": [{
+            "expr": "count(kube_pod_status_phase{namespace=\"online-boutique\",phase=\"Running\"} == 1)"
+          }]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["online-boutique", "slo"],
+      "time": {"from": "now-6h", "to": "now"},
+      "title": "Online Boutique SLO",
+      "uid": "ob-slo"
+    }

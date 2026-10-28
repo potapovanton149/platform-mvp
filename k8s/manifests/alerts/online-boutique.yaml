@@ -1,0 +1,47 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: online-boutique
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: online-boutique.rules
+      interval: 30s
+      rules:
+        - alert: OBHighErrorRate
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{namespace="online-boutique",status=~"5.."}[5m]))
+            /
+            sum(rate(nginx_ingress_controller_requests{namespace="online-boutique"}[5m])) > 0.05
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "High 5xx error rate on online-boutique ingress"
+
+        - alert: OBHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{namespace="online-boutique"}[5m]))
+            ) > 1
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "p95 latency > 1s on online-boutique ingress"
+
+        - alert: OBServiceDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace="online-boutique"} == 0
+          for: 2m
+          labels: {severity: critical, app: online-boutique}
+          annotations:
+            summary: "Deployment {{ $labels.deployment }} has 0 available replicas"
+
+        - alert: OBPodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="online-boutique"}[10m]) > 3
+          for: 5m
+          labels: {severity: warning, app: online-boutique}
+          annotations:
+            summary: "Pod {{ $labels.pod }} crash looping"

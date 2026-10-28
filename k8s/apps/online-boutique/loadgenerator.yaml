@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgenerator
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: loadgenerator}}
+  template:
+    metadata:
+      labels: {app: loadgenerator}
+    spec:
+      imagePullSecrets: [{name: harbor-creds}]
+      containers:
+        - name: loadgenerator
+          image: harbor.platform-mvp-potapov.ru/online-boutique/loadgenerator:v1.0.0
+          env:
+            - {name: FRONTEND_ADDR, value: "frontend:80"}
+            - {name: USERS, value: "10"}
+            - {name: OTEL_SERVICE_NAME, value: "loadgenerator"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.tracing.svc:4317"}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits:   {cpu: 500m, memory: 512Mi}
