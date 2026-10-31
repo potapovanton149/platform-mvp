@@ -25,7 +25,7 @@ spec:
       containers:
         - name: shippingservice
           image: harbor.platform-mvp-potapov.ru/online-boutique/shippingservice:v1.0.0
-        imagePullPolicy: Always
+          imagePullPolicy: Always
           ports: [{name: grpc, containerPort: 50051}]
           env:
             - {name: PORT, value: "50051"}
