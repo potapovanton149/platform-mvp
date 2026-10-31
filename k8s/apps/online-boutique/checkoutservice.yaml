@@ -25,6 +25,7 @@ spec:
       containers:
         - name: checkoutservice
           image: harbor.platform-mvp-potapov.ru/online-boutique/checkoutservice:v1.0.0
+        imagePullPolicy: Always
           ports: [{name: grpc, containerPort: 5050}]
           env:
             - {name: PORT, value: "5050"}
