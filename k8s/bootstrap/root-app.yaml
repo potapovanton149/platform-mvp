@@ -12,7 +12,7 @@ spec:
     targetRevision: master
     path: k8s/apps
     directory:
-      recurse: true
+      recurse: false
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
