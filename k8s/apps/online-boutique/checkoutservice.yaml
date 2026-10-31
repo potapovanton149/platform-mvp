@@ -24,7 +24,7 @@ spec:
       imagePullSecrets: [{name: harbor-creds}]
       containers:
         - name: checkoutservice
-          image: harbor.platform-mvp-potapov.ru/online-boutique/checkoutservice:v1.0.0
+          image: harbor.platform-mvp-potapov.ru/online-boutique/checkoutservice:v1.0.2
           imagePullPolicy: Always
           ports: [{name: grpc, containerPort: 5050}]
           env:

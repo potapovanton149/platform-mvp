@@ -24,7 +24,7 @@ spec:
       imagePullSecrets: [{name: harbor-creds}]
       containers:
         - name: shippingservice
-          image: harbor.platform-mvp-potapov.ru/online-boutique/shippingservice:v1.0.0
+          image: harbor.platform-mvp-potapov.ru/online-boutique/shippingservice:v1.0.2
           imagePullPolicy: Always
           ports: [{name: grpc, containerPort: 50051}]
           env:
