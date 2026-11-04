@@ -1,3 +1,9 @@
+# external-dns отключён: DNS-записи управляются вручную через Cloudflare API
+# Причина: внешний ingress идёт через VPS + WireGuard + SSH-туннель,
+# а не из кластера. external-dns создавал бы записи на ClusterIP (10.233.8.150),
+# которые недоступны извне.
+replicaCount: 0
+
 provider:
   name: cloudflare
 
